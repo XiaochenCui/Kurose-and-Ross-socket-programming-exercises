@@ -3,6 +3,7 @@
 import sys
 import argparse
 
+import random
 import time
 import socket
 from socket import socket as Socket
@@ -12,16 +13,16 @@ def main():
     # Command line arguments. Use a server_port > 1024 by default so that we can run
     # server without sudo.
     parser = argparse.ArgumentParser()
-    
+
     parser.add_argument('--server-port', '-p', default=2081, type=int,
                         help='Server_Port to use')
-    
+
     parser.add_argument('--run-server', '-s', action='store_true',
                         help='Run a ping server')
-    
+
     parser.add_argument('server_address', default='localhost',
                         help='Server to ping, no effect if running as a server.')
-    
+
     args = parser.parse_args()
 
 
@@ -56,7 +57,9 @@ def run_server(server_port):
         while True:
             # Receive message and send one back
             _, client_address = server_socket.recvfrom(1024)
-            server_socket.sendto("".encode(), client_address)
+            random.seed()
+            time.sleep(random.random() * 1.5)
+            server_socket.sendto(b"", client_address)
 
     return 0
 
@@ -64,10 +67,18 @@ def run_server(server_port):
 def run_client(server_address, server_port):
     """Ping a UDP pinger server running at the given address
     """
+    client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    client_socket.settimeout(1)
 
-    # Fill in the client side code here.
-
-    raise NotImplementedError
+    for i in range(10):
+        start_time = time.time()
+        client_socket.sendto(b"", (server_address, server_port))
+        try:
+            client_socket.recvfrom(2048)
+            end_time = time.time()
+            print(i, " RTT: ", end_time-start_time)
+        except socket.timeout:
+            print(i, " timeout")
 
     return 0
 

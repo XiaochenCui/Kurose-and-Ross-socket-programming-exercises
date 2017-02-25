@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import argparse
+import os
 
 import sys
 import itertools
@@ -46,7 +47,7 @@ def main():
             with server_socket.accept()[0] as connection_socket:
                 request = connection_socket.recv(1024).decode('ascii')
                 reply = http_handle(request)
-                connection_socket.send(reply.encode('ascii'))
+                connection_socket.send(reply.encode('utf-8'))
 
 
             print("\n\nReceived request")
@@ -73,15 +74,16 @@ def http_handle(request_string):
 
     assert not isinstance(request_string, bytes)
 
+    location = request_string.split(" ")[1]
+    reply = location
 
-    # Fill in the code to handle the http request here. You will probably want
-    # to write additional functions to parse the http request into a nicer data
-    # structure (eg a dict), and to easily create http responses.
+    if os.path.isfile(location):
+        with open(location, "rt") as f:
+            reply = f.read()
+    else:
+        reply = "HTTP/1.0 404 Not Found\r\n"
 
-    raise NotImplementedError
-
-    pass
-
+    return reply
 
 
 if __name__ == "__main__":
